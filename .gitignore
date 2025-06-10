@@ -1,5 +1,12 @@
+# Exclude dataset directory
 data/data_indoor
 data/data_outdoor
 data/dummy_data
 
 *.pdf
+
+# Exclude Python virtual environment
+.venv
+
+# Misc
+.DS_Store
