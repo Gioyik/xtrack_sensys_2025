@@ -1,0 +1,8 @@
+ultralytics
+opencv-python
+numpy
+pandas
+#open3d
+matplotlib
+dpkt
+ouster-sdk
