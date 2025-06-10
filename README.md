@@ -46,8 +46,8 @@ This project aims to perform sensor fusion for object tracking using data from t
 4.  **Convert Raw Data:**
     The raw LIDAR data from the `data` directory needs to be converted into `.pcd` and `.csv` files. The script `scripts/os_pcap_to_pcd_csv.py` is used for this purpose.
 
-    For example, to convert the outdoor dataset:
+    For example, to convert the outdoor dataset and save the output to the `output` directory:
     ```bash
     python3 scripts/os_pcap_to_pcd_csv.py data/data_outdoor/os_pcaps/ouster_20250604074152.pcap -o output/
     ```
-    This will create a new directory in `output/` containing the processed point clouds and IMU data.
+    This will create the `output` directory if it doesn't exist and save the processed point clouds and IMU data there.

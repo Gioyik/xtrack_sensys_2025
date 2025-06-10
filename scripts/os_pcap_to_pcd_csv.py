@@ -53,11 +53,16 @@ def main():
                     "and extract IMU packets (using pcap‐level timestamps) to CSV."
     )
     parser.add_argument("pcap_path", help="Path to input PCAP file")
+    parser.add_argument("-o", "--out_dir", help="Path to output directory")
     args = parser.parse_args()
     pcap_path = args.pcap_path
 
     base_name = os.path.splitext(os.path.basename(pcap_path))[0]
-    out_dir = base_name
+    
+    if args.out_dir:
+        out_dir = args.out_dir
+    else:
+        out_dir = base_name
     os.makedirs(out_dir, exist_ok=True)
 
     # 1) Open scan source to grab metadata
@@ -73,7 +78,7 @@ def main():
     # 2) First pass: iterate dpkt + Ouster to record pcap Ts of each LidarPacket,
     #    and write IMU CSV.
     lidar_timestamps = []
-    imu_csv_path = f"{base_name}_imu.csv"
+    imu_csv_path = os.path.join(out_dir, f"{base_name}_imu.csv")
     with open(imu_csv_path, "w", newline="") as csvfile:
         imu_writer = csv.writer(csvfile)
         imu_writer.writerow(["pcap_ts_ns", "ax", "ay", "az", "wx", "wy", "wz"])
