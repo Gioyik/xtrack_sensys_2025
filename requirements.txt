@@ -6,3 +6,7 @@ open3d
 matplotlib
 dpkt
 ouster-sdk
+pathlib
+ruff
+torch
+torchvision

@@ -13,18 +13,15 @@ Example:
     python3 cameras_to_ros2bag.py /home/alice/camera /home/alice/camera_bag
 """
 
-import os
-import glob
 import argparse
-
-import rclpy
-from rclpy.serialization import serialize_message
-from rclpy.time import Time
-
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
+import glob
+import os
 
 import cv2
+import rclpy
+from cv_bridge import CvBridge
+from rclpy.serialization import serialize_message
+from rclpy.time import Time
 
 # Ensure you have rosbag2_py installed in your ROS 2 environment:
 try:
@@ -133,7 +130,7 @@ def create_or_get_topic(writer, topics_map, topic_name):
         name=topic_name,
         type="sensor_msgs/msg/Image",
         serialization_format="cdr",
-        offered_qos_profiles=""  # we leave QoS string empty
+        offered_qos_profiles="",  # we leave QoS string empty
     )
     writer.create_topic(topic_meta)
     topics_map[topic_name] = topic_meta
@@ -144,13 +141,12 @@ def main():
         description="Convert a folder of *_timestamps.txt + media → one rosbag2 (SQLite3)."
     )
     parser.add_argument(
-        "input_folder",
-        help="Path to the top-level camera folder (e.g. .../camera)."
+        "input_folder", help="Path to the top-level camera folder (e.g. .../camera)."
     )
     parser.add_argument(
         "output_bag",
         help="Name/path for the output rosbag2 (no file extension). "
-             "This will create a folder <output_bag>/ containing SQLite files."
+        "This will create a folder <output_bag>/ containing SQLite files.",
     )
     args = parser.parse_args()
 
@@ -164,8 +160,7 @@ def main():
     writer = rosbag2_py.SequentialWriter()
     storage_opts = rosbag2_py.StorageOptions(uri=output_bag, storage_id="sqlite3")
     converter_opts = rosbag2_py.ConverterOptions(
-        input_serialization_format="cdr",
-        output_serialization_format="cdr"
+        input_serialization_format="cdr", output_serialization_format="cdr"
     )
     writer.open(storage_opts, converter_opts)
 
@@ -185,7 +180,9 @@ def main():
 
             # Parse metadata + timestamps
             try:
-                topic_name, encoding, qos_label, timestamps = parse_timestamps_file(timestamps_path)
+                topic_name, encoding, qos_label, timestamps = parse_timestamps_file(
+                    timestamps_path
+                )
             except Exception as e:
                 print(f"[ERROR] Could not parse {timestamps_path}: {e}")
                 continue
@@ -256,7 +253,9 @@ def main():
                     serialized = serialize_message(img_msg)
                     writer.write(topic_name, serialized, nanosec)
 
-            print(f"[OK] Wrote {media_type} → topic '{topic_name}' ({len(timestamps)} messages).")
+            print(
+                f"[OK] Wrote {media_type} → topic '{topic_name}' ({len(timestamps)} messages)."
+            )
 
     # 4) Close bag & shutdown
     print(f"[DONE] All done. Bag written to: {output_bag}")

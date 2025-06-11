@@ -1,9 +1,7 @@
-import os
 import argparse
 import csv
-import struct
+import os
 
-import numpy as np
 import dpkt
 from ouster.sdk import client, pcap
 
@@ -50,7 +48,7 @@ def write_pcd_with_extra_fields(path, points, intensity, reflectivity, nearir):
 def main():
     parser = argparse.ArgumentParser(
         description="Convert every scan in a PCAP to PCD (named by midpoint of first/last packet capture time) "
-                    "and extract IMU packets (using pcap‐level timestamps) to CSV."
+        "and extract IMU packets (using pcap‐level timestamps) to CSV."
     )
     parser.add_argument("pcap_path", help="Path to input PCAP file")
     parser.add_argument("-o", "--out_dir", help="Path to output directory")
@@ -58,7 +56,7 @@ def main():
     pcap_path = args.pcap_path
 
     base_name = os.path.splitext(os.path.basename(pcap_path))[0]
-    
+
     if args.out_dir:
         out_dir = args.out_dir
     else:
@@ -71,9 +69,9 @@ def main():
     xyz_lut = client.XYZLut(metadata)
     pkt_fmt = client.PacketFormat(metadata)
 
-    columns_per_frame = metadata.format.columns_per_frame        # e.g., 2048
-    columns_per_packet = metadata.format.columns_per_packet      # e.g., 16
-    packets_per_scan = columns_per_frame // columns_per_packet   # e.g., 128
+    columns_per_frame = metadata.format.columns_per_frame  # e.g., 2048
+    columns_per_packet = metadata.format.columns_per_packet  # e.g., 16
+    packets_per_scan = columns_per_frame // columns_per_packet  # e.g., 128
 
     # 2) First pass: iterate dpkt + Ouster to record pcap Ts of each LidarPacket,
     #    and write IMU CSV.
@@ -101,11 +99,17 @@ def main():
                     wy = pkt_fmt.imu_av_y(packet.buf)
                     wz = pkt_fmt.imu_av_z(packet.buf)
 
-                    imu_writer.writerow([
-                        pcap_ts_ns,
-                        float(ax), float(ay), float(az),
-                        float(wx), float(wy), float(wz)
-                    ])
+                    imu_writer.writerow(
+                        [
+                            pcap_ts_ns,
+                            float(ax),
+                            float(ay),
+                            float(az),
+                            float(wx),
+                            float(wy),
+                            float(wz),
+                        ]
+                    )
 
     total_lidar_packets = len(lidar_timestamps)
     if total_lidar_packets < packets_per_scan:
