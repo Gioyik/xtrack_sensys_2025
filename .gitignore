@@ -4,6 +4,11 @@ data/data_outdoor
 data/dummy_data
 output/
 
+# build
+__pycache__
+*.pt
+
+# scripts
 *.pdf
 
 # Exclude Python virtual environment

@@ -2,7 +2,7 @@ ultralytics
 opencv-python
 numpy
 pandas
-#open3d
+open3d
 matplotlib
 dpkt
 ouster-sdk
