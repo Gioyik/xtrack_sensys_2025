@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+
 def detect_yellow_vest(person_image):
     """
     Detects if a person is wearing a yellow vest using color segmentation.
@@ -26,7 +27,9 @@ def detect_yellow_vest(person_image):
     # Calculate the percentage of yellow pixels in the cleaned mask
     # If the percentage is above a threshold, we assume a vest is present.
     if cv2.countNonZero(mask) > 0:
-        yellow_percentage = (cv2.countNonZero(mask) / (person_image.shape[0] * person_image.shape[1])) * 100
+        yellow_percentage = (
+            cv2.countNonZero(mask) / (person_image.shape[0] * person_image.shape[1])
+        ) * 100
     else:
         yellow_percentage = 0
 

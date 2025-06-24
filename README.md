@@ -5,21 +5,20 @@ This project focuses on the identification, localization, and tracking of people
 ## Features
 
 - **Person Detection and Tracking:** Utilizes the YOLOv11 model from `ultralytics` to detect and track people in a video stream.
+- **Advanced Re-Identification (Re-ID):** Implements two methods to ensure consistent tracking IDs, even when individuals leave and re-enter the frame:
+  - **Custom Re-ID:** A custom implementation using appearance embeddings from a ResNet model to re-associate tracks.
+  - **BoTSORT Re-ID:** Leverages the built-in re-identification capabilities of the BoTSORT tracker.
 - **3D Localization:** Calculates the 3D position of detected individuals relative to the xTrack vehicle using RGB and depth data.
 - **Safety Vest Detection:** Implements a color-based segmentation algorithm to identify people wearing yellow safety vests.
 - **Selectable Trackers:** Allows for the selection of different tracking algorithms (`bytetrack` or `botsort`) for performance comparison.
 - **Real-time Data Logging:** Logs all tracking data for people with vests to a CSV file in real-time.
 - **Configurable Debugging:** Provides multiple levels of debugging output for development and fine-tuning.
 
-### Fine-Tuning Vest Detection
+## How to Run
 
-The vest detection is performed in `src/vision.py` and is based on color segmentation in the HSV color space. If the detection is not accurate, you can fine-tune the following in the `detect_yellow_vest` function:
-- `lower_yellow` and `upper_yellow`: These numpy arrays define the color range for yellow.
-- The percentage threshold (currently `10.0`): This is the minimum percentage of yellow pixels required to classify a person as wearing a vest.
+The main script for this project is `src/person_tracker.py`. It can be run from the command line with several options to control its behavior.
 
-Using the `--debug 2` flag is highly recommended for this process, as it provides direct visual feedback on the performance of the color segmentation.
-
-## Usage
+### Prerequisites
 
 Ensure you have a Python environment set up with all the required packages installed from `requirements.txt`.
 
@@ -27,42 +26,64 @@ Ensure you have a Python environment set up with all the required packages insta
 pip install -r requirements.txt
 ```
 
-The main script for this project is `src/person_tracker.py`. It can be run from the command line with several options to control its behavior. To run the script with default settings (outdoor dataset, bytetrack tracker, no debug output):
+### Basic Usage
 
+To run the script with default settings (outdoor dataset, bytetrack tracker, custom re-ID, no debug output):
 ```bash
 python3 src/person_tracker.py --dataset outdoor
 ```
-
-This tool will start:
-
-- **Live Visualization:** A window will open showing the video stream with bounding boxes around detected people.
-  - **Yellow Box:** Indicates a person detected with a safety vest.
-  - **Red Box:** Indicates a person detected without a safety vest.
-- **CSV Log File:** A file named `output/tracking_log_[dataset].csv` will be created, containing the timestamp, frame ID, object ID, and 3D position for each person detected *with a vest*.
 
 ### Command-Line Arguments
 
 The script accepts the following command-line arguments:
 
 - `--dataset`: Specifies the dataset to process.
-  - `indoor`: Use the indoor video and data.
-  - `outdoor`: Use the outdoor video and data.
+  - `indoor` | `outdoor`
   - Default: `outdoor`
 
 - `--tracker`: Specifies the tracking algorithm to use.
-  - `bytetrack`: Use the ByteTrack algorithm.
-  - `botsort`: Use the BoT-SORT algorithm.
+  - `bytetrack` | `botsort`
   - Default: `bytetrack`
+
+- `--reid_method`: Specifies the re-identification method to use.
+  - `custom`: Use the custom appearance-based re-ID.
+  - `botsort`: Use the native BoTSORT re-ID. (Requires `--tracker botsort`).
+  - Default: `custom`
 
 - `--debug`: Sets the level of debugging output.
   - `0`: No debugging output (default).
-  - `1`: Prints basic tracking information to the console.
+  - `1`: Prints basic tracking and re-ID information to the console.
   - `2`: Prints detailed information and shows the vest detection mask for each person in a separate window.
 
-To run the script on the outdoor dataset using the `botsort` tracker and full debugging visualization:
+### Example with Options
 
+To run the script on the outdoor dataset using the `botsort` tracker with its native re-ID and basic debugging:
 ```bash
-python3 src/person_tracker.py --dataset outdoor --tracker botsort --debug 2
+python3 src/person_tracker.py --dataset outdoor --tracker botsort --reid_method botsort --debug 1
+```
+
+## Output
+
+- **Live Visualization:** A window will open showing the video stream with bounding boxes around detected people.
+  - **Yellow Box:** Indicates a person detected with a safety vest.
+  - **Red Box:** Indicates a person detected without a safety vest.
+- **CSV Log File:** A file named `output/tracking_log_[dataset].csv` will be created, containing the timestamp, frame ID, object ID, and 3D position for each person detected *with a vest*.
+
+## Fine-Tuning Vest Detection
+
+The vest detection is performed in `src/vision.py` and is based on color segmentation in the HSV color space. If the detection is not accurate, you can fine-tune the following in the `detect_yellow_vest` function:
+- `lower_yellow` and `upper_yellow`: These numpy arrays define the color range for yellow.
+- The percentage threshold (currently `10.0`): This is the minimum percentage of yellow pixels required to classify a person as wearing a vest.
+
+Using the `--debug 2` flag is highly recommended for this process, as it provides direct visual feedback on the performance of the color segmentation.
+
+## Code Formatting and Linting
+
+This project uses `ruff` for code formatting and linting. The configuration is defined in `ruff.toml`.
+
+To format the code and fix any linting issues, run the following command from the project's root directory:
+```bash
+ruff format . && ruff check . --fix
 ```
 
 ## Processing Raw Data

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import os
 import sys
+
 import rclpy
+import rosbag2_py
 from rclpy.serialization import deserialize_message
 from rosidl_runtime_py.utilities import get_message
-import rosbag2_py
+
 
 def extract_header_stamp(serialized_msg, msg_type):
     """
@@ -20,6 +22,7 @@ def extract_header_stamp(serialized_msg, msg_type):
     except Exception:
         return None
 
+
 def infer_storage_id(ext_token):
     """
     Given an extension token (".db3"/"db3" or ".mcap"/"mcap"),
@@ -32,6 +35,7 @@ def infer_storage_id(ext_token):
     if t == "mcap":
         return "mcap"
     raise ValueError(f"Unknown format '{ext_token}'. Use .db3 or .mcap.")
+
 
 def find_bag_start_end(bag_path, converter_options):
     """
@@ -67,6 +71,7 @@ def find_bag_start_end(bag_path, converter_options):
         raise RuntimeError(f"No valid header.stamp found in '{bag_path}'.")
     return earliest, latest
 
+
 def merge_bags_start_at_latest_limited(input_bags, storage_id, output_uri):
     """
     Merge multiple ROS 2 bags into a single bag named output_uri,
@@ -97,15 +102,15 @@ def merge_bags_start_at_latest_limited(input_bags, storage_id, output_uri):
 
     # 2) Compute common_start = max(earliest_i) and durations
     earliest_list = [start for (start, end) in bag_stamps.values()]
-    latest_list   = [end   for (start, end) in bag_stamps.values()]
-    common_start  = max(earliest_list)
-    durations     = [end - start for (start, end) in bag_stamps.values()]
-    max_dur       = min(durations)
+    latest_list = [end for (start, end) in bag_stamps.values()]
+    common_start = max(earliest_list)
+    durations = [end - start for (start, end) in bag_stamps.values()]
+    max_dur = min(durations)
 
     # 3) Collect all messages that lie within [common_start, common_start + max_dur]
     cutoff = common_start + max_dur
-    all_msgs   = []      # list of (orig_ts, topic_name, serialized_data)
-    topic_types = {}     # global map: topic_name → msg_type
+    all_msgs = []  # list of (orig_ts, topic_name, serialized_data)
+    topic_types = {}  # global map: topic_name → msg_type
 
     for bag_path in input_bags:
         storage_id_in = infer_storage_id(os.path.splitext(bag_path)[1])
@@ -160,6 +165,7 @@ def merge_bags_start_at_latest_limited(input_bags, storage_id, output_uri):
 
     del writer
     rclpy.shutdown()
+
 
 if __name__ == "__main__":
     args = sys.argv[1:]

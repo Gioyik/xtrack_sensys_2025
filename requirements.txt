@@ -7,3 +7,4 @@ matplotlib
 dpkt
 ouster-sdk
 pathlib
+ruff

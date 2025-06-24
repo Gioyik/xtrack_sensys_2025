@@ -1,17 +1,18 @@
-import os
 import argparse
 import struct
 
-import numpy as np
 import dpkt
-import rosbag2_py
 import rclpy
-from rclpy.serialization import serialize_message
+import rosbag2_py
 from ouster.sdk import client, pcap
-from sensor_msgs.msg import PointCloud2, PointField, Imu
+from rclpy.serialization import serialize_message
+from sensor_msgs.msg import Imu, PointCloud2, PointField
 from std_msgs.msg import Header
 
-def create_pointcloud2(points, intensity, reflectivity, nearir, timestamp_ns, frame_id="lidar"):
+
+def create_pointcloud2(
+    points, intensity, reflectivity, nearir, timestamp_ns, frame_id="lidar"
+):
     """
     Build a sensor_msgs/PointCloud2 message containing fields:
       x y z intensity reflectivity nearir
@@ -59,6 +60,7 @@ def create_pointcloud2(points, intensity, reflectivity, nearir, timestamp_ns, fr
     pc2.data = bytes(buffer)
     return pc2
 
+
 def create_imu_msg(ax, ay, az, wx, wy, wz, timestamp_ns, frame_id="imu"):
     sec = int(timestamp_ns // 1_000_000_000)
     nanosec = int(timestamp_ns % 1_000_000_000)
@@ -84,6 +86,7 @@ def create_imu_msg(ax, ay, az, wx, wy, wz, timestamp_ns, frame_id="imu"):
     imu.linear_acceleration_covariance = [0.0] * 9
     return imu
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Convert PCAP → ROS 2 bag with PointCloud2 and Imu topics."
@@ -95,7 +98,9 @@ def main():
     rclpy.init()
 
     bag_name = "pcap_ros2bag"
-    storage_opts = rosbag2_py._storage.StorageOptions(uri=bag_name, storage_id="sqlite3")
+    storage_opts = rosbag2_py._storage.StorageOptions(
+        uri=bag_name, storage_id="sqlite3"
+    )
     converter_opts = rosbag2_py._storage.ConverterOptions(
         input_serialization_format="cdr", output_serialization_format="cdr"
     )
@@ -104,7 +109,9 @@ def main():
 
     writer.create_topic(
         rosbag2_py._storage.TopicMetadata(
-            name="pointcloud", type="sensor_msgs/msg/PointCloud2", serialization_format="cdr"
+            name="pointcloud",
+            type="sensor_msgs/msg/PointCloud2",
+            serialization_format="cdr",
         )
     )
     writer.create_topic(
@@ -179,6 +186,7 @@ def main():
 
     print(f"Finished writing bag: {bag_name}")
     rclpy.shutdown()
+
 
 if __name__ == "__main__":
     main()

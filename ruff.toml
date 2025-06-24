@@ -1,0 +1,16 @@
+# Ruff configuration file
+# See: https://docs.astral.sh/ruff/configuration/
+
+# Enable a standard set of rules
+select = ["E", "F", "W", "I"]
+
+# Ignore certain rules if necessary
+# ignore = []
+
+# Set the line length
+line-length = 88
+
+[format]
+# Use black-compatible formatting
+quote-style = "double"
+indent-style = "space"

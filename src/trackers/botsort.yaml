@@ -18,5 +18,5 @@ gmc_method: sparseOptFlow # method of global motion compensation
 # ReID model related thresh
 proximity_thresh: 0.5 # minimum IoU for valid match with ReID
 appearance_thresh: 0.8 # minimum appearance similarity for ReID
-with_reid: False
+with_reid: True # indicates whether to use ReID
 model: auto # uses native features if detector is YOLO else yolo11n-cls.pt
