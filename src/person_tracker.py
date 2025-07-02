@@ -76,7 +76,8 @@ def main():
         return
 
     # --- Configuration ---
-    REID_SIMILARITY_THRESHOLD = 0.80  # Adjusted for better matching
+    # REID_SIMILARITY_THRESHOLD = 0.80  # Adjusted for better matching
+    REID_SIMILARITY_THRESHOLD = 0.4  # Adjusted for better matching
     MAX_LOST_FRAMES = 90  # Shorter buffer for lost tracks
 
     # Load the YOLO model
