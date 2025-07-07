@@ -55,11 +55,19 @@ The script accepts the following command-line arguments:
   - `1`: Prints basic tracking and re-ID information to the console.
   - `2`: Prints detailed information and shows the vest detection mask for each person in a separate window.
 
+- `--benchmark`: Enables performance benchmarking.
+  - When enabled, the script will print a summary of performance metrics upon completion, including average FPS and the time taken for key operations.
+
 ### Example with Options
 
 To run the script on the outdoor dataset using the `botsort` tracker with its native re-ID and basic debugging:
 ```bash
 python3 src/person_tracker.py --dataset outdoor --tracker botsort --reid_method botsort --debug 1
+```
+
+To run the script and benchmark its performance:
+```bash
+python3 src/person_tracker.py --dataset outdoor --benchmark
 ```
 
 ## Output

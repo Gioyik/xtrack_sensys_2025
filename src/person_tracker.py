@@ -1,4 +1,6 @@
 import argparse
+import time
+from collections import deque
 from pathlib import Path
 
 import cv2
@@ -38,6 +40,11 @@ def main():
         default="custom",
         choices=["custom", "botsort"],
         help="Re-ID method to use",
+    )
+    parser.add_argument(
+        "--benchmark",
+        action="store_true",
+        help="Enable performance benchmarking.",
     )
     args = parser.parse_args()
 
@@ -133,10 +140,22 @@ def main():
     next_person_id = 1
     previous_track_ids = set()
 
+    # --- Performance Benchmarking Setup ---
+    if args.benchmark:
+        perf_data = {
+            "total_frame_time": deque(maxlen=100),
+            "yolo_time": deque(maxlen=100),
+            "reid_time": deque(maxlen=100),
+            "vest_depth_time": deque(maxlen=100),
+        }
+
     frame_id = 0
     while cap.isOpened():
         if frame_id >= len(video_timestamps):
             break
+
+        start_time = time.time()
+
         ret, frame = cap.read()
         if not ret:
             break
@@ -144,10 +163,13 @@ def main():
         timestamp = video_timestamps[frame_id]
 
         # --- Run Ultralytics Tracker ---
+        yolo_start = time.time()
         tracker_config_path = project_dir / f"src/trackers/{args.tracker}.yaml"
         results = model.track(
             frame, persist=True, classes=[0], conf=0.5, tracker=str(tracker_config_path)
         )
+        if args.benchmark:
+            perf_data["yolo_time"].append(time.time() - yolo_start)
 
         current_ultralytics_ids = set()
         if results[0].boxes.id is not None:
@@ -155,6 +177,7 @@ def main():
             ultralytics_ids = results[0].boxes.id.cpu().numpy().astype(int)
 
             # --- Custom Re-ID Logic ---
+            reid_start = time.time()
             if args.reid_method == "custom":
                 current_ultralytics_ids = set(ultralytics_ids)
 
@@ -214,8 +237,11 @@ def main():
                 previous_track_ids = current_ultralytics_ids
             else:  # botsort re-id
                 processed_ids = list(zip(boxes, ultralytics_ids))
+            if args.benchmark:
+                perf_data["reid_time"].append(time.time() - reid_start)
 
             # --- Main Processing Loop ---
+            vest_depth_start = time.time()
             for box, display_id in processed_ids:
                 if display_id is None:
                     continue
@@ -297,6 +323,11 @@ def main():
                             (0, 0, 255),
                             1,
                         )
+            if args.benchmark:
+                perf_data["vest_depth_time"].append(time.time() - vest_depth_start)
+
+        if args.benchmark:
+            perf_data["total_frame_time"].append(time.time() - start_time)
 
         cv2.imshow("xTrack Person Tracking", frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -306,6 +337,19 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
     print(f"Tracking data saved to {output_csv_path}")
+
+    # --- Print Benchmark Results ---
+    if args.benchmark:
+        print("\n--- Performance Benchmark Results ---")
+        total_time = sum(perf_data["total_frame_time"])
+        avg_fps = len(perf_data["total_frame_time"]) / total_time
+        print(f"Average FPS: {avg_fps:.2f}")
+
+        for name, data in perf_data.items():
+            if len(data) > 0:
+                avg_time = sum(data) / len(data)
+                print(f"Average {name.replace('_', ' ')}: {avg_time * 1000:.2f} ms")
+        print("------------------------------------")
 
 
 if __name__ == "__main__":
