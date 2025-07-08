@@ -9,8 +9,11 @@ This project focuses on the identification, localization, and tracking of people
   - **Custom Re-ID:** A custom implementation using appearance embeddings from a ResNet model to re-associate tracks.
   - **BoTSORT Re-ID:** Leverages the built-in re-identification capabilities of the BoTSORT tracker.
 - **3D Localization:** Calculates the 3D position of detected individuals relative to the xTrack vehicle using RGB and depth data.
-- **Safety Vest Detection:** Implements a color-based segmentation algorithm to identify people wearing yellow safety vests.
+- **Safety Vest Detection:** Implements two methods for vest detection:
+  - **Color-Based:** A simple and fast HSV color segmentation algorithm.
+  - **Model-Based:** A more robust method using a pre-trained PyTorch model (MobileNetV2) for higher accuracy.
 - **Selectable Trackers:** Allows for the selection of different tracking algorithms (`bytetrack` or `botsort`) for performance comparison.
+- **Performance Benchmarking:** Provides tools to measure and log the performance (FPS, component-wise latency) of the tracking pipeline.
 - **Real-time Data Logging:** Logs all tracking data for people with vests to a CSV file in real-time.
 - **Configurable Debugging:** Provides multiple levels of debugging output for development and fine-tuning.
 
@@ -58,6 +61,17 @@ The script accepts the following command-line arguments:
 - `--benchmark`: Enables performance benchmarking.
   - When enabled, the script will print a summary of performance metrics upon completion, including average FPS and the time taken for key operations.
 
+- `--vest_detection`: Specifies the vest detection method.
+  - `color`: Use the original HSV color segmentation (default).
+  - `model`: Use the advanced vest classifier.
+
+- `--vest_model_path`: Specifies the path to the trained vest classifier model.
+  - Default: `vest_model.pth`
+
+- `--device`: Specifies the device to run the models on.
+  - `cpu` | `cuda`
+  - Default: `cpu`
+
 ### Example with Options
 
 To run the script on the outdoor dataset using the `botsort` tracker with its native re-ID and basic debugging:
@@ -69,6 +83,29 @@ To run the script and benchmark its performance:
 ```bash
 python3 src/person_tracker.py --dataset outdoor --benchmark
 ```
+
+To run the script using the model-based vest detector on a CUDA-enabled GPU:
+```bash
+python3 src/person_tracker.py --dataset outdoor --vest_detection model --device cuda --vest_model_path /path/to/your/vest_model.pth
+```
+
+## Model-Based Vest Detection
+
+When using the `--vest_detection model` option, the system relies on a pre-trained PyTorch model to classify whether a person is wearing a safety vest.
+
+### Providing the Model
+
+**You must provide your own trained model file.** The script expects a file named `vest_model.pth` by default, but you can specify a different path using the `--vest_model_path` argument.
+
+### Model Architecture
+
+The `src/vest_classifier.py` is built to load a `MobileNetV2` model from `torchvision`, with its final classification layer modified for binary classification (2 output classes: `no_vest` and `vest`).
+
+If you are training your own model, you should follow this architecture. The classifier expects a model that has been trained on images of people with and without safety vests.
+
+### Dependencies
+
+Using the model-based detector requires `torch` and `torchvision`, which have been added to the `requirements.txt` file.
 
 ## Output
 

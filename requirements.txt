@@ -8,3 +8,5 @@ dpkt
 ouster-sdk
 pathlib
 ruff
+torch
+torchvision

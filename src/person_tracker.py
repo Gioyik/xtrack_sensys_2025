@@ -11,6 +11,7 @@ from ultralytics import YOLO
 from coordinate_frames import K_rgb, T_base_rgb_camera
 from localization import get_3d_position, get_closest_depth_frame
 from reid import cosine_similarity, get_appearance_embedding
+from vest_classifier import VestClassifier
 from vision import detect_yellow_vest
 
 
@@ -42,6 +43,26 @@ def main():
         help="Re-ID method to use",
     )
     parser.add_argument(
+        "--vest_detection",
+        type=str,
+        default="color",
+        choices=["color", "model"],
+        help="Vest detection method to use.",
+    )
+    parser.add_argument(
+        "--vest_model_path",
+        type=str,
+        default="vest_model.pth",
+        help="Path to the vest detection model file.",
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cpu",
+        choices=["cpu", "cuda"],
+        help="Device to run the models on.",
+    )
+    parser.add_argument(
         "--benchmark",
         action="store_true",
         help="Enable performance benchmarking.",
@@ -60,6 +81,13 @@ def main():
 
     # Load the YOLO model
     model = YOLO("yolo11n.pt")
+    model.to(args.device)
+
+    # --- Vest Classifier Setup ---
+    if args.vest_detection == "model":
+        vest_classifier = VestClassifier(
+            model_path=args.vest_model_path, device=args.device
+        )
 
     # --- Path Setup ---
     current_file = Path(__file__).resolve()
@@ -251,15 +279,21 @@ def main():
                 person_image = frame[y1:y2, x1:x2]
 
                 if person_image.size > 0:
-                    is_vest, vest_mask, yellow_percentage = detect_yellow_vest(
-                        person_image
-                    )
-
-                    if args.debug >= 2:
-                        cv2.imshow(f"Vest Mask ID: {display_id}", vest_mask)
-                        print(
-                            f"Frame {frame_id}, Track ID {display_id}: Yellow Percentage = {yellow_percentage:.2f}%"
+                    if args.vest_detection == "model":
+                        is_vest, confidence = vest_classifier.predict(person_image)
+                        if args.debug >= 2:
+                            print(
+                                f"Frame {frame_id}, Track ID {display_id}: Vest Confidence = {confidence:.2f}"
+                            )
+                    else:  # Original color-based detection
+                        is_vest, vest_mask, yellow_percentage = detect_yellow_vest(
+                            person_image
                         )
+                        if args.debug >= 2:
+                            cv2.imshow(f"Vest Mask ID: {display_id}", vest_mask)
+                            print(
+                                f"Frame {frame_id}, Track ID {display_id}: Yellow Percentage = {yellow_percentage:.2f}%"
+                            )
 
                     if is_vest:
                         depth_frame_path = get_closest_depth_frame(
