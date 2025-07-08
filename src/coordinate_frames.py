@@ -20,3 +20,14 @@ c_x = video_resolution[0] / 2.0  # principal points (assuming at the image cente
 c_y = video_resolution[1] / 2.0  # principal points (assuming at the image center)
 K_rgb = np.array([[f_xy, 0.0, c_x], [0.0, f_xy, c_y], [0.0, 0.0, 1.0]])
 K_depth = K_rgb
+
+# Transformation from camera to LiDAR frame.
+# T_camera_lidar = T_camera_base @ T_base_lidar
+# where T_camera_base is the inverse of T_base_camera.
+try:
+    T_camera_base = np.linalg.inv(T_base_rgb_camera)
+    T_camera_lidar = T_camera_base @ T_base_lidar
+except np.linalg.LinAlgError:
+    print("Warning: Could not invert T_base_rgb_camera. Using identity for T_camera_lidar.")
+    T_camera_lidar = np.identity(4)
+

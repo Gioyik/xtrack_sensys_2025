@@ -72,6 +72,10 @@ The script accepts the following command-line arguments:
   - `cpu` | `cuda`
   - Default: `cpu`
 
+- `--localization_method`: Specifies the localization method to use.
+  - `depth`: Use the RGB-D camera for 3D localization (default).
+  - `lidar`: Use the LiDAR point cloud for 3D localization.
+
 ### Example with Options
 
 To run the script on the outdoor dataset using the `botsort` tracker with its native re-ID and basic debugging:
@@ -87,6 +91,11 @@ python3 src/person_tracker.py --dataset outdoor --benchmark
 To run the script using the model-based vest detector on a CUDA-enabled GPU:
 ```bash
 python3 src/person_tracker.py --dataset outdoor --vest_detection model --device cuda --vest_model_path /path/to/your/vest_model.pth
+```
+
+To run the script using LiDAR-based localization:
+```bash
+python3 src/person_tracker.py --dataset outdoor --localization_method lidar
 ```
 
 ## Model-Based Vest Detection
@@ -133,12 +142,17 @@ ruff format . && ruff check . --fix
 
 ## Processing Raw Data
 
-The raw LIDAR data from the data directory needs to be converted into .pcd and .csv files. The script in `scripts/os_pcap_to_pcd_csv.py` is used for this purpose. It has been modified to add the option to setup a target folder.
+The raw LIDAR data from the data directory needs to be converted into `.pcd` files and associated timestamps for synchronization. The script `scripts/os_pcap_to_pcd_csv.py` handles this conversion.
 
-To convert the outdoor dataset and save the output to the `output` folder:
+**Important:** The script has been updated to generate a `timestamps.txt` file, which is required for LiDAR-based localization. If you have previously processed your data, you must **re-run the conversion script** to generate this file.
+
+To convert the outdoor dataset and save the output to a structured directory:
 
 ```bash
-python3 scripts/os_pcap_to_pcd_csv.py data/data_outdoor/os_pcaps/ouster_20250604074152.pcap -o output/
+python3 scripts/os_pcap_to_pcd_csv.py data/data_outdoor/os_pcaps/ouster_20250604074152.pcap -o output
 ```
 
-This will create the `output` directory if it doesn't exist and save the processed point clouds and IMU data there.
+This will create the `output/ouster_20250604074152` directory, which will contain:
+- `.pcd` files for each LiDAR scan.
+- A `timestamps.txt` file containing the timestamp for each scan.
+- An `_imu.csv` file with the raw IMU data.

@@ -121,6 +121,7 @@ def main():
     scan_source = pcap.PcapScanSource(pcap_path).single_source(0)
 
     # 4) For each scan index, compute midpoint of first/last packet pcap timestamps
+    scan_timestamps = []
     for idx, scan in enumerate(scan_source):
         if idx >= num_scans:
             break
@@ -131,6 +132,7 @@ def main():
         first_pkt_ts = lidar_timestamps[start_idx]
         last_pkt_ts = lidar_timestamps[last_idx]
         mid_ts = (first_pkt_ts + last_pkt_ts) // 2
+        scan_timestamps.append(mid_ts / 1e9)  # Convert ns to seconds for consistency
 
         # 4a) Convert ranges → XYZ and flatten to (N,3)
         xyz = xyz_lut(scan.field(client.ChanField.RANGE))
@@ -145,6 +147,13 @@ def main():
         out_path = os.path.join(out_dir, f"{mid_ts}.pcd")
         write_pcd_with_extra_fields(out_path, points, intensity, refl, nearir)
         print(f"[{idx}] Wrote PCD: {out_path}")
+
+    # 5) Write scan timestamps to a file
+    timestamps_path = os.path.join(out_dir, "timestamps.txt")
+    with open(timestamps_path, "w") as f:
+        for ts in scan_timestamps:
+            f.write(f"{ts}\n")
+    print(f"Wrote {len(scan_timestamps)} scan timestamps to: {timestamps_path}")
 
 
 if __name__ == "__main__":

@@ -8,7 +8,12 @@ import numpy as np
 import pandas as pd
 from ultralytics import YOLO
 
-from coordinate_frames import K_rgb, T_base_rgb_camera
+from coordinate_frames import K_rgb, T_base_rgb_camera, T_camera_lidar
+from lidar_utils import (
+    find_closest_lidar_file,
+    get_3d_position_from_lidar,
+    load_point_cloud,
+)
 from localization import get_3d_position, get_closest_depth_frame
 from reid import cosine_similarity, get_appearance_embedding
 from vest_classifier import VestClassifier
@@ -61,6 +66,13 @@ def main():
         default="cpu",
         choices=["cpu", "cuda"],
         help="Device to run the models on.",
+    )
+    parser.add_argument(
+        "--localization_method",
+        type=str,
+        default="depth",
+        choices=["depth", "lidar"],
+        help="Localization method to use.",
     )
     parser.add_argument(
         "--benchmark",
@@ -126,6 +138,10 @@ def main():
             data_dir
             / "data_outdoor/camera/d435i/depth/cam_2025_06_04_09_41_51_timestamps.txt"
         )
+        lidar_folder_path = (
+            project_dir / "output/ouster_20250604074152"
+        )  # Corrected path
+        lidar_timestamps_path = lidar_folder_path / "timestamps.txt"
 
     output_csv_path = project_dir / f"output/tracking_log_{args.dataset}.csv"
 
@@ -142,6 +158,17 @@ def main():
 
     video_timestamps = load_timestamps(video_timestamps_path)
     depth_timestamps = load_timestamps(depth_timestamps_path)
+    if args.localization_method == "lidar":
+        lidar_timestamps = load_timestamps(lidar_timestamps_path)
+        # The pcap conversion script names files by timestamp, so we can find them
+        # without a simple glob. We will construct the path from the timestamp.
+        # This is a placeholder for that logic, as find_closest_lidar_file
+        # will handle the matching.
+        lidar_pcd_files = list(lidar_folder_path.glob("*.pcd"))
+        if not lidar_pcd_files:
+            print(
+                f"Warning: No LiDAR .pcd files found in {lidar_folder_path}. LiDAR localization will not work."
+            )
 
     # --- Video Processing ---
     cap = cv2.VideoCapture(str(video_path))
@@ -297,56 +324,75 @@ def main():
                             )
 
                     if is_vest:
-                        depth_frame_path = get_closest_depth_frame(
-                            timestamp, depth_timestamps, depth_folder_path
-                        )
-                        if depth_frame_path:
-                            depth_image = cv2.imread(
-                                str(depth_frame_path), cv2.IMREAD_UNCHANGED
+                        x, y, z = 0, 0, 0
+                        if args.localization_method == "lidar":
+                            lidar_file = find_closest_lidar_file(
+                                timestamp, lidar_timestamps, lidar_pcd_files
                             )
-                            if depth_image is not None:
-                                x_cam, y_cam, z_cam = get_3d_position(
-                                    box, depth_image, K_rgb
+                            point_cloud = load_point_cloud(lidar_file)
+                            if point_cloud is not None:
+                                x_cam, y_cam, z_cam = get_3d_position_from_lidar(
+                                    box, point_cloud, K_rgb, T_camera_lidar
                                 )
                                 pos_camera_frame = np.array([x_cam, y_cam, z_cam, 1])
                                 pos_base_frame = T_base_rgb_camera @ pos_camera_frame
                                 x, y, z = pos_base_frame[:3]
-
-                                log_entry = pd.DataFrame(
-                                    [[timestamp, frame_id, display_id, x, y, z]],
-                                    columns=[
-                                        "timestamp",
-                                        "frame_id",
-                                        "object_id",
-                                        "x_position",
-                                        "y_position",
-                                        "z_position",
-                                    ],
+                        else:  # Default to depth camera
+                            depth_frame_path = get_closest_depth_frame(
+                                timestamp, depth_timestamps, depth_folder_path
+                            )
+                            if depth_frame_path:
+                                depth_image = cv2.imread(
+                                    str(depth_frame_path), cv2.IMREAD_UNCHANGED
                                 )
-                                with open(output_csv_path, "a", newline="") as f:
-                                    log_entry.to_csv(f, header=False, index=False)
+                                if depth_image is not None:
+                                    x_cam, y_cam, z_cam = get_3d_position(
+                                        box, depth_image, K_rgb
+                                    )
+                                    pos_camera_frame = np.array(
+                                        [x_cam, y_cam, z_cam, 1]
+                                    )
+                                    pos_base_frame = (
+                                        T_base_rgb_camera @ pos_camera_frame
+                                    )
+                                    x, y, z = pos_base_frame[:3]
 
-                                cv2.rectangle(
+                        if x != 0 or y != 0 or z != 0:
+                            log_entry = pd.DataFrame(
+                                [[timestamp, frame_id, display_id, x, y, z]],
+                                columns=[
+                                    "timestamp",
+                                    "frame_id",
+                                    "object_id",
+                                    "x_position",
+                                    "y_position",
+                                    "z_position",
+                                ],
+                            )
+                            with open(output_csv_path, "a", newline="") as f:
+                                log_entry.to_csv(f, header=False, index=False)
+
+                            cv2.rectangle(
                                     frame, (x1, y1), (x2, y2), (0, 255, 255), 2
                                 )
-                                cv2.putText(
-                                    frame,
-                                    f"ID: {display_id} (Vest)",
-                                    (x1, y1 - 10),
-                                    cv2.FONT_HERSHEY_SIMPLEX,
-                                    0.5,
-                                    (0, 255, 255),
-                                    2,
-                                )
-                                cv2.putText(
-                                    frame,
-                                    f"Pos: ({x:.2f}, {y:.2f}, {z:.2f})m",
-                                    (x1, y2 + 20),
-                                    cv2.FONT_HERSHEY_SIMPLEX,
-                                    0.5,
-                                    (0, 255, 255),
-                                    2,
-                                )
+                            cv2.putText(
+                                frame,
+                                f"ID: {display_id} (Vest)",
+                                (x1, y1 - 10),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                0.5,
+                                (0, 255, 255),
+                                2,
+                            )
+                            cv2.putText(
+                                frame,
+                                f"Pos: ({x:.2f}, {y:.2f}, {z:.2f})m",
+                                (x1, y2 + 20),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                0.5,
+                                (0, 255, 255),
+                                2,
+                            )
                     else:
                         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 1)
                         cv2.putText(
