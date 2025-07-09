@@ -92,16 +92,6 @@ def main():
     REID_SIMILARITY_THRESHOLD = 0.4  # Adjusted for better matching
     MAX_LOST_FRAMES = 90  # Shorter buffer for lost tracks
 
-    # Load the YOLO model
-    model = YOLO("yolo11n.pt")
-    model.to(args.device)
-
-    # --- Vest Classifier Setup ---
-    if args.vest_detection == "model":
-        vest_classifier = VestClassifier(
-            model_path=args.vest_model_path, device=args.device
-        )
-
     # --- Path Setup ---
     current_file = Path(__file__).resolve()
     project_dir = current_file.parents[1]
@@ -146,20 +136,24 @@ def main():
     output_csv_path = project_dir / f"output/tracking_log_{args.dataset}.csv"
 
     # --- Load Timestamps ---
-    def load_timestamps(path):
+    def load_timestamps(path, scale_factor=1.0):
         timestamps = []
-        with open(path, "r") as f:
-            for line in f:
-                try:
-                    timestamps.append(float(line.strip()))
-                except ValueError:
-                    continue
+        try:
+            with open(path, "r") as f:
+                for line in f:
+                    try:
+                        timestamps.append(float(line.strip()) * scale_factor)
+                    except ValueError:
+                        continue
+        except FileNotFoundError:
+            print(f"Warning: Timestamp file not found at {path}")
         return timestamps
 
     video_timestamps = load_timestamps(video_timestamps_path)
     depth_timestamps = load_timestamps(depth_timestamps_path)
     if args.localization_method == "lidar":
-        lidar_timestamps = load_timestamps(lidar_timestamps_path)
+        # LiDAR timestamps are in nanoseconds, convert to seconds
+        lidar_timestamps = load_timestamps(lidar_timestamps_path, scale_factor=1e-9)
         # The pcap conversion script names files by timestamp, so we can find them
         # without a simple glob. We will construct the path from the timestamp.
         # This is a placeholder for that logic, as find_closest_lidar_file
@@ -175,6 +169,18 @@ def main():
     if not cap.isOpened():
         print(f"Error: Could not open video {video_path}")
         return
+
+    # --- Model and Classifier Loading ---
+    print("Loading models...")
+    model = YOLO("yolo11n.pt")
+    model.to(args.device)
+
+    vest_classifier = None
+    if args.vest_detection == "model":
+        vest_classifier = VestClassifier(
+            model_path=args.vest_model_path, device=args.device
+        )
+    print("Models loaded.")
 
     # --- Setup CSV Logging ---
     with open(output_csv_path, "w", newline="") as f:

@@ -132,7 +132,7 @@ def main():
         first_pkt_ts = lidar_timestamps[start_idx]
         last_pkt_ts = lidar_timestamps[last_idx]
         mid_ts = (first_pkt_ts + last_pkt_ts) // 2
-        scan_timestamps.append(mid_ts)  # Convert ns to seconds for consistency
+        scan_timestamps.append(mid_ts)  # Keep timestamp in nanoseconds
 
         # 4a) Convert ranges → XYZ and flatten to (N,3)
         xyz = xyz_lut(scan.field(client.ChanField.RANGE))
