@@ -1,27 +1,27 @@
-import os
 import numpy as np
 import open3d as o3d
-from pathlib import Path
+
 
 def find_closest_lidar_file(timestamp, lidar_timestamps, lidar_files):
     """
     Finds the path to the LiDAR .pcd file with the closest timestamp.
-    
+
     Args:
         timestamp (float): The RGB camera frame timestamp.
         lidar_timestamps (list): A list of timestamps for the LiDAR scans.
         lidar_files (list): A list of paths to the LiDAR .pcd files.
-        
+
     Returns:
         Path object to the closest LiDAR file or None if not found.
     """
     if not lidar_timestamps or not lidar_files:
         return None
-    
+
     # Find the index of the closest timestamp
     closest_index = np.argmin(np.abs(np.array(lidar_timestamps) - timestamp))
-    
+
     return lidar_files[closest_index]
+
 
 def load_point_cloud(pcd_path):
     """
@@ -35,6 +35,7 @@ def load_point_cloud(pcd_path):
     except Exception as e:
         print(f"Error loading point cloud {pcd_path}: {e}")
         return None
+
 
 def get_3d_position_from_lidar(box_2d, point_cloud, K, T_cam_lidar):
     """

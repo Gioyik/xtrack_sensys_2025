@@ -28,6 +28,7 @@ try:
     T_camera_base = np.linalg.inv(T_base_rgb_camera)
     T_camera_lidar = T_camera_base @ T_base_lidar
 except np.linalg.LinAlgError:
-    print("Warning: Could not invert T_base_rgb_camera. Using identity for T_camera_lidar.")
+    print(
+        "Warning: Could not invert T_base_rgb_camera. Using identity for T_camera_lidar."
+    )
     T_camera_lidar = np.identity(4)
-

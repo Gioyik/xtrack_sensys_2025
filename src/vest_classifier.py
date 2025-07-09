@@ -1,8 +1,10 @@
+from pathlib import Path
+
 import cv2
 import torch
 import torchvision.transforms as T
 from torchvision.models import mobilenet_v2
-from pathlib import Path
+
 
 class VestClassifier:
     def __init__(self, model_path="vest_model.pth", device="cpu"):
@@ -19,12 +21,14 @@ class VestClassifier:
         self.model.eval()
 
         # Define the image transformations
-        self.transform = T.Compose([
-            T.ToPILImage(),
-            T.Resize((224, 224)),
-            T.ToTensor(),
-            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
+        self.transform = T.Compose(
+            [
+                T.ToPILImage(),
+                T.Resize((224, 224)),
+                T.ToTensor(),
+                T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]
+        )
 
     def _load_model(self, model_path):
         """Loads the MobileNetV2 model, modified for binary classification."""
@@ -37,7 +41,9 @@ class VestClassifier:
             print(f"Loading trained weights from {model_path}")
             model.load_state_dict(torch.load(model_path, map_location=self.device))
         else:
-            print(f"Warning: Model file not found at {model_path}. Using un-trained model.")
+            print(
+                f"Warning: Model file not found at {model_path}. Using un-trained model."
+            )
             print("The model will not provide meaningful predictions.")
 
         return model
