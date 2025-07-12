@@ -1,5 +1,8 @@
 import time
+import warnings
 from collections import deque
+
+warnings.filterwarnings("ignore")
 
 import cv2
 import numpy as np
@@ -115,7 +118,12 @@ class PersonTracker:
             config.PROJECT_DIR / f"src/trackers/{self.args.tracker}.yaml"
         )
         results = self.model.track(
-            frame, persist=True, classes=[0], conf=0.5, tracker=str(tracker_config_path)
+            frame,
+            persist=True,
+            classes=[0],
+            conf=0.5,
+            tracker=str(tracker_config_path),
+            verbose=False,
         )
         if self.args.benchmark:
             self.perf_data["yolo_time"].append(time.time() - yolo_start)
@@ -223,7 +231,7 @@ class PersonTracker:
             if self.args.debug >= 2:
                 cv2.imshow(f"Vest Mask ID: {display_id}", vest_mask)
                 print(
-                    f"Frame {frame_id}, Track ID {display_id}: Yellow Percentage = {yellow_percentage:.2f}%"
+                    f"Frame {frame_id}, Track ID {display_id}: Yellow Percentage = {yellow_percentage * 100:.2f}%"
                 )
 
         if is_vest:

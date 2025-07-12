@@ -32,7 +32,7 @@ class VestClassifier:
 
     def _load_model(self, model_path):
         """Loads the MobileNetV2 model, modified for binary classification."""
-        model = mobilenet_v2(weights=None)
+        model = mobilenet_v2(weights=None, progress=False)
         # Modify the classifier for 2 classes: (0: no_vest, 1: vest)
         model.classifier[1] = torch.nn.Linear(model.last_channel, 2)
 
