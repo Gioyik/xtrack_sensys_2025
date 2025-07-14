@@ -229,7 +229,8 @@ class PersonTracker:
         else:
             is_vest, vest_mask, yellow_percentage = detect_yellow_vest(person_image)
             if self.args.debug >= 2:
-                cv2.imshow(f"Vest Mask ID: {display_id}", vest_mask)
+                if is_vest:
+                    cv2.imshow(f"Vest Mask ID: {display_id}", vest_mask)
                 print(
                     f"Frame {frame_id}, Track ID {display_id}: Yellow Percentage = {yellow_percentage * 100:.2f}%"
                 )
