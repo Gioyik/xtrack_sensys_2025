@@ -28,9 +28,6 @@ def get_dataset_paths(dataset_name):
         return {
             "video_path": DATA_DIR
             / "data_outdoor/camera/d435i/color/cam_2025_06_04_09_41_51.avi",
-            # / "data_outdoor/camera/d435i/color/test_long.mov",
-            # / "data_outdoor/camera/d435i/color/test1.mov",
-            # / "data_outdoor/camera/d435i/color/test2.mov",
             "video_timestamps_path": DATA_DIR
             / "data_outdoor/camera/d435i/color/cam_2025_06_04_09_41_51_timestamps.txt",
             "depth_folder_path": DATA_DIR
