@@ -10,3 +10,4 @@ pathlib
 ruff
 torch
 torchvision
+scikit-learn

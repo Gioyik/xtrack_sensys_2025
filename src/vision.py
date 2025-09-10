@@ -104,9 +104,16 @@ def enhance_yellow_with_clahe(roi, clip_limit=2.0, tile_grid_size=(8, 8)):
     return mask_enhanced
 
 
-def detect_yellow_vest(person_image, threshold=0.05):
+def detect_yellow_vest(person_image, threshold=5.0):
     """
-    Weighted fusion of HSV and LAB validation results
+    Enhanced vest detection with configurable threshold.
+    
+    Args:
+        person_image: Cropped person image
+        threshold: Yellow percentage threshold (0-100 scale)
+        
+    Returns:
+        tuple: (is_vest_detected, mask, yellow_percentage)
     """
     # Apply gamma correction
     upper_half = extract_upper_body_roi(person_image)
@@ -115,5 +122,8 @@ def detect_yellow_vest(person_image, threshold=0.05):
 
     # HSV validation
     mask_hsv, yellow_percentage_hsv = validate_hsv_color(upper_half)
+    
+    # Convert to percentage (0-100 scale) to match threshold parameter
+    yellow_percentage = yellow_percentage_hsv * 100
 
-    return yellow_percentage_hsv > threshold, mask_hsv, yellow_percentage_hsv
+    return yellow_percentage > threshold, mask_hsv, yellow_percentage_hsv

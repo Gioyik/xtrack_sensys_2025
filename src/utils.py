@@ -47,20 +47,50 @@ def parse_arguments():
         "--device",
         type=str,
         default="cpu",
-        choices=["cpu", "cuda"],
-        help="Device to run the models on.",
+        choices=["cpu", "cuda", "mps"],
+        help="Device to run the models on (cpu, cuda for NVIDIA GPUs, mps for Apple Silicon).",
     )
     parser.add_argument(
         "--localization_method",
         type=str,
         default="depth",
-        choices=["depth", "lidar"],
-        help="Localization method to use.",
+        choices=["depth", "lidar", "fusion"],
+        help="Localization method to use (depth: RGB-D only, lidar: LiDAR only, fusion: combine both sensors).",
     )
     parser.add_argument(
         "--benchmark",
         action="store_true",
         help="Enable performance benchmarking.",
+    )
+    parser.add_argument(
+        "--jump_frames",
+        type=int,
+        default=0,
+        help="Number of frames to skip between processed frames (0 = no skipping).",
+    )
+    parser.add_argument(
+        "--vest_threshold",
+        type=float,
+        default=5.0,
+        help="Yellow percentage threshold for vest detection (default: 5.0%).",
+    )
+    parser.add_argument(
+        "--vest_persistence",
+        type=int,
+        default=1,
+        help="Number of consecutive frames vest must be detected before confirming (default: 1).",
+    )
+    parser.add_argument(
+        "--reid_threshold",
+        type=float,
+        default=0.75,
+        help="ReID similarity threshold for re-identifying lost tracks (default: 0.75, range: 0.5-0.95).",
+    )
+    parser.add_argument(
+        "--max_lost_frames",
+        type=int,
+        default=90,
+        help="Maximum frames a track can be lost before being permanently deleted (default: 90).",
     )
     return parser.parse_args()
 

@@ -13,9 +13,9 @@ class VestClassifier:
 
         Args:
             model_path (str): Path to the trained PyTorch model file.
-            device (str): The device to run the model on ('cpu' or 'cuda').
+            device (str): The device to run the model on ('cpu', 'cuda', or 'mps').
         """
-        self.device = torch.device(device)
+        self.device = self._validate_device(device)
         self.model = self._load_model(model_path)
         self.model.to(self.device)
         self.model.eval()
@@ -29,6 +29,21 @@ class VestClassifier:
                 T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ]
         )
+    
+    def _validate_device(self, device_str):
+        """Validate and return a torch device, falling back if necessary"""
+        try:
+            device = torch.device(device_str)
+            if device.type == "cuda" and not torch.cuda.is_available():
+                print(f"Warning: CUDA not available for vest classifier, falling back to CPU")
+                return torch.device("cpu")
+            elif device.type == "mps" and not (hasattr(torch.backends, 'mps') and torch.backends.mps.is_available()):
+                print(f"Warning: MPS not available for vest classifier, falling back to CPU")
+                return torch.device("cpu")
+            return device
+        except Exception:
+            print(f"Warning: Invalid device '{device_str}' for vest classifier, falling back to CPU")
+            return torch.device("cpu")
 
     def _load_model(self, model_path):
         """Loads the MobileNetV2 model, modified for binary classification."""
