@@ -170,7 +170,6 @@ def get_3d_position_from_lidar(box_2d, point_cloud, K, T_cam_lidar):
     if point_cloud is None or point_cloud.shape[0] == 0:
         return 0, 0, 0
 
-    # 1. Advanced Point Cloud Preprocessing
     # Filter noise and distant points
     filtered_cloud = filter_point_cloud(point_cloud)
     if filtered_cloud is None or filtered_cloud.shape[0] == 0:
@@ -182,7 +181,6 @@ def get_3d_position_from_lidar(box_2d, point_cloud, K, T_cam_lidar):
         # Fallback to filtered cloud if ground removal fails
         non_ground_cloud = filtered_cloud
 
-    # 2. Transform LiDAR points to Camera Frame
     # Add homogeneous coordinate (w=1) to the points
     points_h = np.hstack((non_ground_cloud, np.ones((non_ground_cloud.shape[0], 1))))
     # Transform points to camera coordinates
@@ -194,13 +192,11 @@ def get_3d_position_from_lidar(box_2d, point_cloud, K, T_cam_lidar):
     if points_in_front_of_cam.shape[0] == 0:
         return 0, 0, 0
 
-    # 3. Project 3D points to 2D Image Plane
     # Apply camera intrinsics: (u, v, 1) * z = K * (x, y, z)
     points_proj_h = (K @ points_in_front_of_cam.T).T
     # Normalize by the z-coordinate to get pixel coordinates
     points_uv = points_proj_h[:, :2] / points_proj_h[:, 2, np.newaxis]
 
-    # 4. Frustum Culling: Filter points within the 2D bounding box
     x1, y1, x2, y2 = box_2d
     in_box_indices = (
         (points_uv[:, 0] >= x1)
@@ -213,7 +209,6 @@ def get_3d_position_from_lidar(box_2d, point_cloud, K, T_cam_lidar):
     if points_in_box.shape[0] == 0:
         return 0, 0, 0
 
-    # 5. Advanced Depth Estimation using Clustering
     final_depth = None
     
     # Try clustering-based approach for robust depth estimation
@@ -248,7 +243,6 @@ def get_3d_position_from_lidar(box_2d, point_cloud, K, T_cam_lidar):
     if final_depth is None or final_depth <= 0:
         return 0, 0, 0
 
-    # 6. 3D Position Calculation (Deprojection)
     # Get the center of the bounding box
     cx = (x1 + x2) / 2
     cy = (y1 + y2) / 2

@@ -294,3 +294,7 @@ This will create the `output/ouster_20250604074152` directory, which will contai
 - `.pcd` files for each LiDAR scan.
 - A `timestamps.txt` file containing the timestamp for each scan.
 - An `_imu.csv` file with the raw IMU data.
+
+## License
+
+This project is licensed under the GPLv3 License - see the [LICENSE](LICENSE) file for details.

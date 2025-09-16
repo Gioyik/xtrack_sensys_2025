@@ -70,17 +70,6 @@ def run_test(config, output_dir):
             
         return test_result
         
-    except subprocess.TimeoutExpired:
-        print(f"⏰ Test timed out after 10 minutes")
-        return {
-            "name": config["name"],
-            "config": config["params"],
-            "duration": 600,
-            "success": False,
-            "stdout": "",
-            "stderr": "Test timed out",
-            "timestamp": datetime.now().isoformat()
-        }
     except Exception as e:
         print(f"💥 Test crashed: {e}")
         return {

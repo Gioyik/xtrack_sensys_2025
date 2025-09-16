@@ -482,7 +482,7 @@ class PersonTracker:
         total_processing_time = time.time() - self.start_time if self.start_time else 0
         
         # Performance Metrics
-        print(f"\n📊 PERFORMANCE METRICS")
+        print(f"\nPERFORMANCE METRICS")
         print("-" * 30)
         total_time = sum(self.perf_data["total_frame_time"])
         if total_time > 0:
@@ -490,7 +490,7 @@ class PersonTracker:
             print(f"Average FPS: {avg_fps:.2f}")
             print(f"Total Processing Time: {total_processing_time:.1f} seconds")
 
-        print(f"\n⏱️  COMPONENT LATENCY")
+        print(f"\nCOMPONENT LATENCY")
         print("-" * 30)
         for name, data in self.perf_data.items():
             if len(data) > 0:
@@ -500,7 +500,7 @@ class PersonTracker:
                 print(f"{name.replace('_', ' ').title():<20}: {avg_time * 1000:6.2f} ms (avg) | {min_time * 1000:6.2f} ms (min) | {max_time * 1000:6.2f} ms (max)")
         
         # Detection Statistics
-        print(f"\n🎯 DETECTION STATISTICS")
+        print(f"\nDETECTION STATISTICS")
         print("-" * 30)
         print(f"Total Detections: {self.detection_stats['total_detections']}")
         print(f"Vest Detections: {self.detection_stats['vest_detections']}")
@@ -511,7 +511,7 @@ class PersonTracker:
             print(f"Vest Detection Rate: {vest_rate:.1f}%")
         
         # ReID Performance Analysis
-        print(f"\n🔄 RE-IDENTIFICATION ANALYSIS")
+        print(f"\nRE-IDENTIFICATION ANALYSIS")
         print("-" * 30)
         print(f"Total Re-ID Events: {self.detection_stats['reid_events']}")
         print(f"Unique Track IDs: {len(self.detection_stats['track_ids_seen'])}")
@@ -533,16 +533,16 @@ class PersonTracker:
         
         # ReID Quality Assessment
         if self.detection_stats['reid_events'] > 0:
-            print(f"\n📊 ReID Quality Indicators:")
-            print(f"  - Frequent Re-IDs (>10% of detections): {'⚠️  YES' if (self.detection_stats['reid_events'] / max(self.detection_stats['total_detections'], 1)) > 0.1 else '✅ NO'}")
-            print(f"  - Many Unique IDs (efficiency <80%): {'⚠️  YES' if len(self.detection_stats['track_ids_seen']) > 0 and (len(self.detection_stats['track_ids_seen']) / self.detection_stats['max_track_id'] * 100 < 80) else '✅ NO'}")
-            print(f"  - Threshold seems: {'🔴 Too Low' if (self.detection_stats['reid_events'] / max(self.detection_stats['total_detections'], 1)) > 0.15 else '🟡 Moderate' if (self.detection_stats['reid_events'] / max(self.detection_stats['total_detections'], 1)) > 0.05 else '🟢 Good'}")
+            print(f"\nReID Quality Indicators:")
+            print(f"  - Frequent Re-IDs (>10% of detections): {'  YES' if (self.detection_stats['reid_events'] / max(self.detection_stats['total_detections'], 1)) > 0.1 else ' NO'}")
+            print(f"  - Many Unique IDs (efficiency <80%): {'  YES' if len(self.detection_stats['track_ids_seen']) > 0 and (len(self.detection_stats['track_ids_seen']) / self.detection_stats['max_track_id'] * 100 < 80) else ' NO'}")
+            print(f"  - Threshold seems: {' Too Low' if (self.detection_stats['reid_events'] / max(self.detection_stats['total_detections'], 1)) > 0.15 else ' Moderate' if (self.detection_stats['reid_events'] / max(self.detection_stats['total_detections'], 1)) > 0.05 else ' Good'}")
         
         # Localization Statistics
         total_localizations = self.detection_stats['successful_localizations'] + self.detection_stats['failed_localizations']
         if total_localizations > 0:
             success_rate = (self.detection_stats['successful_localizations'] / total_localizations) * 100
-            print(f"\n📍 LOCALIZATION PERFORMANCE")
+            print(f"\nLOCALIZATION PERFORMANCE")
             print("-" * 30)
             print(f"Successful Localizations: {self.detection_stats['successful_localizations']}")
             print(f"Failed Localizations: {self.detection_stats['failed_localizations']}")
@@ -551,7 +551,7 @@ class PersonTracker:
         # Yellow Percentage Statistics
         if self.detection_stats['yellow_percentages']:
             yellow_percentages = self.detection_stats['yellow_percentages']
-            print(f"\n🟡 VEST DETECTION ANALYSIS")
+            print(f"\nVEST DETECTION ANALYSIS")
             print("-" * 30)
             print(f"Mean Yellow Percentage: {np.mean(yellow_percentages):.2f}%")
             print(f"Median Yellow Percentage: {np.median(yellow_percentages):.2f}%")
@@ -567,7 +567,7 @@ class PersonTracker:
             print(f"Below {current_threshold}% threshold: {below_threshold} ({below_threshold/len(yellow_percentages)*100:.1f}%)")
         
         # Configuration Summary
-        print(f"\n⚙️  CONFIGURATION USED")
+        print(f"\nCONFIGURATION USED")
         print("-" * 30)
         print(f"Dataset: {self.args.dataset}")
         print(f"Tracker: {self.args.tracker}")

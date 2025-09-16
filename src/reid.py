@@ -5,7 +5,6 @@ import torchvision.transforms as transforms
 from PIL import Image
 from torchvision.models import ResNet18_Weights, resnet18
 
-# --- Model and Preprocessing Setup ---
 # Use best available device (CUDA > MPS > CPU)
 def get_best_device():
     if torch.cuda.is_available():

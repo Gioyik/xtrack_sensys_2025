@@ -1,17 +1,12 @@
 from pathlib import Path
 
-# --- Project Directory ---
 PROJECT_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJECT_DIR / "data"
 OUTPUT_DIR = PROJECT_DIR / "output"
 
-
-# --- Re-ID Parameters ---
 REID_SIMILARITY_THRESHOLD = 0.4
 MAX_LOST_FRAMES = 90
 
-
-# --- Dataset Paths ---
 def get_dataset_paths(dataset_name):
     if dataset_name == "indoor":
         return {
