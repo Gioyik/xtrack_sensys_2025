@@ -4,7 +4,20 @@ import numpy as np
 
 def extract_upper_body_roi(person_image):
     """
-    Extract upper body region (top 50% of image, torso area)
+    Extract upper body region (top 50% of image, torso area) for vest detection.
+    
+    Safety vests are typically worn on the torso, so focusing on the upper body
+    improves detection accuracy and reduces false positives from other yellow objects.
+    
+    Args:
+        person_image (numpy.ndarray): Full person image (BGR format)
+        
+    Returns:
+        numpy.ndarray: Upper half of the person image
+        
+    Note:
+        The function takes the top 50% of the image height, which corresponds
+        to the torso area where safety vests are typically worn.
     """
     height, width = person_image.shape[:2]
     upper_height = height // 2
@@ -15,7 +28,17 @@ def extract_upper_body_roi(person_image):
 
 def clean_mask_morphological(roi):
     """
-    Clean up mask using Morphological Operations
+    Clean up mask using morphological operations to remove noise and fill gaps.
+    
+    Args:
+        roi (numpy.ndarray): Input binary mask
+        
+    Returns:
+        numpy.ndarray: Cleaned mask after morphological operations
+        
+    Operations:
+        1. Erosion (3x3 kernel, 1 iteration) to remove small noise
+        2. Dilation (3x3 kernel, 3 iterations) to fill holes and gaps
     """
     # Erode the mask to remove small noise
     kernel = np.ones((3, 3), np.uint8)

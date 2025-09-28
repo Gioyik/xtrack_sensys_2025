@@ -7,6 +7,17 @@ from torchvision.models import ResNet18_Weights, resnet18
 
 # Use best available device (CUDA > MPS > CPU)
 def get_best_device():
+    """
+    Automatically select the best available compute device.
+    
+    Returns:
+        torch.device: Best available device
+        
+    Priority Order:
+        1. CUDA (NVIDIA GPU) - if available
+        2. MPS (Apple Silicon GPU) - if available  
+        3. CPU (fallback)
+    """
     if torch.cuda.is_available():
         return torch.device("cuda")
     elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
@@ -15,7 +26,20 @@ def get_best_device():
         return torch.device("cpu")
 
 def validate_device(device_str):
-    """Validate and return a torch device, falling back if necessary"""
+    """
+    Validate and return a torch device, falling back if necessary.
+    
+    Args:
+        device_str (str): Device string to validate ("cpu", "cuda", "mps")
+        
+    Returns:
+        torch.device: Validated device
+        
+    Validation Process:
+        1. Check device availability
+        2. Fall back to best available device if requested device unavailable
+        3. Print warnings for fallbacks
+    """
     try:
         device = torch.device(device_str)
         if device.type == "cuda" and not torch.cuda.is_available():

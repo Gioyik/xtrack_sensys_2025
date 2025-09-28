@@ -5,15 +5,24 @@ from sklearn.cluster import DBSCAN
 
 def find_closest_lidar_file(timestamp, lidar_timestamps, lidar_files):
     """
-    Finds the path to the LiDAR .pcd file with the closest timestamp.
-
+    Find the LiDAR .pcd file with the closest timestamp to the given RGB timestamp.
+    
     Args:
-        timestamp (float): The RGB camera frame timestamp.
-        lidar_timestamps (list): A list of timestamps for the LiDAR scans.
-        lidar_files (list): A list of paths to the LiDAR .pcd files.
-
+        timestamp (float): RGB camera frame timestamp
+        lidar_timestamps (list): List of LiDAR scan timestamps
+        lidar_files (list): List of paths to LiDAR .pcd files
+        
     Returns:
-        Path object to the closest LiDAR file or None if not found.
+        pathlib.Path or None: Path to closest LiDAR file or None if not found
+        
+    Process:
+        1. Calculate absolute differences between RGB timestamp and all LiDAR timestamps
+        2. Find index of minimum difference
+        3. Return corresponding LiDAR file path
+        
+    Note:
+        Uses timestamp-based matching for sensor synchronization.
+        Handles missing or corrupted timestamp files gracefully.
     """
     if not lidar_timestamps or not lidar_files:
         return None
@@ -26,13 +35,23 @@ def find_closest_lidar_file(timestamp, lidar_timestamps, lidar_files):
 
 def load_point_cloud(pcd_path):
     """
-    Loads a point cloud from a .pcd file.
+    Load a point cloud from a .pcd file.
     
     Args:
-        pcd_path: Path to the .pcd file
+        pcd_path (pathlib.Path): Path to the .pcd file
         
     Returns:
-        numpy array of shape (N, 3) containing the point cloud, or None if loading fails
+        numpy.ndarray or None: Point cloud (Nx3) or None if loading fails
+        
+    File Format Support:
+        - ASCII PCD format
+        - Binary PCD format
+        - Handles missing or corrupted files gracefully
+        
+    Error Handling:
+        - Returns None for missing files
+        - Returns None for empty point clouds
+        - Prints error messages for debugging
     """
     if not pcd_path or not pcd_path.is_file():
         return None

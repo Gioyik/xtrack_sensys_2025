@@ -1,0 +1,11 @@
+/* Custom CSS for xTrack Documentation */
+
+/* Logo spacing */
+.logo-spacing {
+    margin-bottom: 2em;
+    display: block;
+}
+
+.logo-spacing img {
+    margin-bottom: 0;
+}

@@ -24,6 +24,36 @@ from vision import detect_yellow_vest
 
 
 class PersonTracker:
+    """
+    Main person tracking system that orchestrates detection, tracking, re-identification, 
+    vest detection, and 3D localization.
+    
+    This class coordinates all components of the xTrack person tracking pipeline:
+    - YOLOv11 person detection and tracking
+    - Appearance-based re-identification
+    - Safety vest detection (color-based or model-based)
+    - 3D localization using depth camera, LiDAR, or sensor fusion
+    - Real-time visualization and data logging
+    
+    Args:
+        args (argparse.Namespace): Command-line arguments and configuration parameters
+        
+    Attributes:
+        args (argparse.Namespace): Configuration parameters
+        paths (dict): Dictionary containing paths to dataset files
+        output_csv_path (pathlib.Path): Path to output CSV file
+        model (ultralytics.YOLO): YOLOv11 person detection model
+        vest_classifier (VestClassifier or None): Model-based vest classifier
+        track_embeddings (dict): Maps track IDs to appearance embeddings
+        lost_tracks (dict): Stores information about temporarily lost tracks
+        id_links (dict): Maps ultralytics track IDs to display IDs
+        next_person_id (int): Counter for generating unique display IDs
+        previous_track_ids (set): Set of track IDs from previous frame
+        vest_detection_history (dict): Vest detection history for temporal filtering
+        perf_data (dict): Performance timing data for benchmarking
+        detection_stats (dict): Detection and tracking statistics
+    """
+    
     def __init__(self, args):
         self.args = args
         self.paths = config.get_dataset_paths(args.dataset)
@@ -98,6 +128,19 @@ class PersonTracker:
         print("Models loaded.")
 
     def run(self):
+        """
+        Main execution loop that processes video frames and performs tracking.
+        
+        This method:
+        1. Opens video capture from the dataset
+        2. Initializes frame counters and performance monitoring
+        3. Processes each frame through the complete tracking pipeline
+        4. Handles frame skipping for performance optimization
+        5. Displays real-time visualization
+        6. Logs results and prints benchmark statistics
+        
+        The method runs until the video ends or the user presses 'q' to quit.
+        """
         cap = cv2.VideoCapture(str(self.paths["video_path"]))
         if not cap.isOpened():
             print(f"Error: Could not open video {self.paths['video_path']}")
@@ -149,6 +192,20 @@ class PersonTracker:
             self._print_benchmark_results()
 
     def _process_frame(self, frame, frame_id, timestamp):
+        """
+        Process a single video frame through the complete tracking pipeline.
+        
+        Args:
+            frame (numpy.ndarray): RGB video frame
+            frame_id (int): Sequential frame number
+            timestamp (float): Frame timestamp in seconds
+            
+        Process Steps:
+            1. Run YOLO person detection with tracking
+            2. Handle custom re-identification (if enabled)
+            3. Process each detected person for vest detection and 3D localization
+            4. Update performance statistics
+        """
         yolo_start = time.time()
         tracker_config_path = (
             config.PROJECT_DIR / f"src/trackers/{self.args.tracker}.yaml"

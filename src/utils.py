@@ -4,7 +4,41 @@ import pandas as pd
 
 
 def parse_arguments():
-    """Parses command-line arguments."""
+    """
+    Parse command-line arguments for the xTrack person tracker.
+    
+    Returns:
+        argparse.Namespace: Parsed command-line arguments
+        
+    Arguments:
+        Dataset Selection:
+            --dataset: Dataset to process ("indoor" | "outdoor", default: "outdoor")
+            
+        Tracking Configuration:
+            --tracker: Tracker algorithm ("bytetrack" | "botsort", default: "bytetrack")
+            --reid_method: Re-ID method ("custom" | "botsort", default: "custom")
+            
+        Vest Detection:
+            --vest_detection: Vest detection method ("color" | "model", default: "color")
+            --vest_model_path: Path to vest model file (default: "vest_model.pth")
+            --vest_threshold: Yellow percentage threshold (default: 5.0, range: 0.1-20.0)
+            --vest_persistence: Consecutive frames for vest confirmation (default: 1, range: 1-10)
+            
+        3D Localization:
+            --localization_method: Localization method ("depth" | "lidar" | "fusion", default: "depth")
+            
+        Performance:
+            --device: Compute device ("cpu" | "cuda" | "mps", default: "cpu")
+            --jump_frames: Frames to skip (default: 0)
+            --benchmark: Enable performance benchmarking (flag)
+            
+        Re-ID Tuning:
+            --reid_threshold: ReID similarity threshold (default: 0.75, range: 0.5-0.95)
+            --max_lost_frames: Max frames to remember lost tracks (default: 90, range: 30-300)
+            
+        Debugging:
+            --debug: Debug level (0 | 1 | 2, default: 0)
+    """
     parser = argparse.ArgumentParser(description="xTrack Person Tracker")
     parser.add_argument(
         "--dataset",
@@ -96,7 +130,33 @@ def parse_arguments():
 
 
 def load_timestamps(path, scale_factor=1.0):
-    """Loads timestamps from a text file."""
+    """
+    Load timestamps from a text file.
+    
+    Args:
+        path (pathlib.Path): Path to timestamp file
+        scale_factor (float): Scale factor to apply to timestamps (default: 1.0)
+        
+    Returns:
+        list: List of timestamps as floats
+        
+    Process:
+        1. Open file and read line by line
+        2. Convert each line to float
+        3. Apply scale factor
+        4. Skip invalid lines
+        5. Return list of valid timestamps
+        
+    Error Handling:
+        - FileNotFoundError: Returns empty list with warning
+        - ValueError: Skips invalid lines
+        - Continues processing valid timestamps
+        
+    Scale Factor Usage:
+        - 1.0: Timestamps in seconds
+        - 1e-9: Convert nanoseconds to seconds
+        - 1e-6: Convert microseconds to seconds
+    """
     timestamps = []
     try:
         with open(path, "r") as f:

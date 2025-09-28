@@ -7,13 +7,33 @@ from torchvision.models import mobilenet_v2
 
 
 class VestClassifier:
+    """
+    Model-based safety vest detection using PyTorch and MobileNetV2.
+    
+    This class provides binary classification for detecting whether a person
+    is wearing a safety vest using a pre-trained MobileNetV2 model.
+    
+    Attributes:
+        device (torch.device): Compute device for model inference
+        model (torch.nn.Module): MobileNetV2 model for binary classification
+        transform (torchvision.transforms.Compose): Image preprocessing pipeline
+    """
+    
     def __init__(self, model_path="vest_model.pth", device="cpu"):
         """
-        Initializes the VestClassifier.
-
+        Initialize the VestClassifier with model path and device.
+        
         Args:
-            model_path (str): Path to the trained PyTorch model file.
-            device (str): The device to run the model on ('cpu', 'cuda', or 'mps').
+            model_path (str): Path to trained PyTorch model file (default: "vest_model.pth")
+            device (str): Compute device ("cpu", "cuda", or "mps")
+            
+        Initialization Process:
+            1. Validate and set compute device
+            2. Load MobileNetV2 model with custom classifier
+            3. Load trained weights if available
+            4. Set model to evaluation mode
+            5. Move model to specified device
+            6. Define image preprocessing pipeline
         """
         self.device = self._validate_device(device)
         self.model = self._load_model(model_path)
@@ -65,13 +85,23 @@ class VestClassifier:
 
     def predict(self, person_image):
         """
-        Predicts if a person is wearing a vest using the loaded model.
-
+        Predict if a person is wearing a safety vest using the loaded model.
+        
         Args:
-            person_image: The cropped BGR image of the person from OpenCV.
-
+            person_image (numpy.ndarray): Cropped BGR image of person from OpenCV
+            
         Returns:
-            A tuple of (is_vest, confidence_score).
+            tuple: (is_vest, confidence_score)
+                - is_vest (bool): Whether person is wearing a vest
+                - confidence_score (float): Confidence score (0.0 to 1.0)
+                
+        Process:
+            1. Validate input image (non-empty, proper format)
+            2. Convert BGR to RGB format
+            3. Apply preprocessing transformations
+            4. Run model inference
+            5. Apply softmax to get probabilities
+            6. Return prediction and confidence
         """
         if person_image is None or person_image.size == 0:
             return False, 0.0

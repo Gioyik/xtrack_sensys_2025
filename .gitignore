@@ -15,5 +15,10 @@ __pycache__
 # Exclude Python virtual environment
 .venv
 
+# Sphinx documentation build files
+docs/build/
+docs/_build/
+docs/source/_templates/
+
 # Misc
 .DS_Store
